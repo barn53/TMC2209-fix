@@ -21,14 +21,20 @@ TMC2209::TMC2209()
 
 #if !defined(ARDUINO_ARCH_RENESAS)
 void TMC2209::setup(HardwareSerial & serial,
-  long serial_baud_rate,
-  SerialAddress serial_address)
+    long serial_baud_rate,
+    SerialAddress serial_address)
 {
-  hardware_serial_ptr_ = &serial;
-  hardware_serial_ptr_->end();
-  hardware_serial_ptr_->begin(serial_baud_rate);
+    hardware_serial_ptr_ = &serial;
+#if defined(ESP32)
+    // Avoid end() on ESP32 because it can leave the UART in a flaky state
+    // immediately before the first configuration writes.
+    hardware_serial_ptr_->begin(serial_baud_rate);
+#else
+    hardware_serial_ptr_->end();
+    hardware_serial_ptr_->begin(serial_baud_rate);
+#endif
 
-  initialize(serial_baud_rate, serial_address);
+    initialize(serial_baud_rate, serial_address);
 }
 #endif
 #if defined(ESP32)
